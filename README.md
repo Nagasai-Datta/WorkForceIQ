@@ -1,4 +1,4 @@
-# ⚡ WorkforceIQ — Enterprise Workforce Skill & Utilization Analytics Platform
+# WorkforceIQ — Enterprise Workforce Skill & Utilization Analytics Platform
 
 A full-stack AI-powered internal tool for enterprises to analyze employee skills,
 optimize project allocation, and predict attrition risk using Machine Learning.
@@ -7,7 +7,7 @@ Built with Flask, PostgreSQL (Supabase), and Scikit-learn.
 
 ---
 
-## 📌 Project Scope
+## Project Scope
 
 This platform solves a real enterprise problem — HR and Project Managers currently
 rely on static spreadsheets to track workforce data. This leads to:
@@ -20,27 +20,31 @@ WorkforceIQ centralizes all of this into one role-based web application.
 
 ---
 
-## 🎯 Features
+## Features
 
 ### HR Manager
+
 - View all employees, filter by skill and department
 - See attrition risk score (ML prediction) per employee
 - Skill gap analysis — which skills have low coverage
 - Full analytics dashboard with charts
 
 ### Project Manager
+
 - Live utilization heatmap (green/yellow/red per employee load)
 - Create projects, assign employees to projects
 - System automatically blocks over-allocation (>100%)
 - Update project status (Draft → Active → Completed)
 
 ### Employee
+
 - View own profile, assigned projects, skill list
 - Edit profile (satisfaction score, hours, department)
 - Add skills manually or paste resume text for AI extraction
 - Privacy toggle for contact info visibility
 
 ### Admin
+
 - Create new users with any role
 - Delete users
 - Change roles of existing users
@@ -48,9 +52,10 @@ WorkforceIQ centralizes all of this into one role-based web application.
 
 ---
 
-## 🤖 Machine Learning
+## Machine Learning
 
 ### Model 1 — Attrition Prediction (Random Forest)
+
 - **Algorithm:** Random Forest Classifier (150 trees)
 - **Training data:** 1000 synthetic employees generated in code
 - **Features used:** years_experience, satisfaction_score, monthly_hours,
@@ -60,6 +65,7 @@ WorkforceIQ centralizes all of this into one role-based web application.
 - **When it trains:** Automatically on first app startup, saves to `ml/models/attrition_model.pkl`
 
 ### Model 2 — Skill Extraction (TF-IDF)
+
 - **Algorithm:** TF-IDF (Term Frequency–Inverse Document Frequency)
 - **Input:** Free-form resume text pasted by employee
 - **Output:** List of detected skills matched against the skills database
@@ -69,7 +75,7 @@ WorkforceIQ centralizes all of this into one role-based web application.
 
 ---
 
-## 🗄️ Database Schema (Supabase PostgreSQL)
+## Database Schema (Supabase PostgreSQL)
 
 ```
 users              → login credentials + role
@@ -82,6 +88,7 @@ utilization_reports→ workload history per employee
 ```
 
 ### Project Status Lifecycle
+
 ```
 Draft → Validating → Active → Paused → Completed
                           ↑_______↓ (can loop back if attrition risk found)
@@ -89,7 +96,7 @@ Draft → Validating → Active → Paused → Completed
 
 ---
 
-## 🔐 Authentication & Authorization
+## Authentication & Authorization
 
 - Passwords stored as **Werkzeug PBKDF2-SHA256 hashes** — never plain text
 - Role stored in **Flask server-side session** after login
@@ -97,30 +104,31 @@ Draft → Validating → Active → Paused → Completed
 - Wrong role attempting access → 403 Forbidden page
 
 ### Role Permissions
-| Role | Access |
-|---|---|
-| `employee` | Own dashboard, profile, skills only |
-| `project_manager` | Heatmap, projects, allocation |
-| `hr` | All employees, attrition analytics, skill gaps |
-| `admin` | Everything + user management |
+
+| Role              | Access                                         |
+| ----------------- | ---------------------------------------------- |
+| `employee`        | Own dashboard, profile, skills only            |
+| `project_manager` | Heatmap, projects, allocation                  |
+| `hr`              | All employees, attrition analytics, skill gaps |
+| `admin`           | Everything + user management                   |
 
 ---
 
-## 🛠️ Tech Stack
+## Tech Stack
 
-| Layer | Technology |
-|---|---|
-| Backend | Python 3, Flask 3.0 |
-| Database | PostgreSQL via Supabase (cloud) |
-| ML | Scikit-learn (Random Forest + TF-IDF) |
-| Frontend | HTML5, CSS3, Vanilla JavaScript |
-| Charts | Chart.js |
-| Auth | Werkzeug password hashing + Flask sessions |
-| Deployment | Railway / Render / PythonAnywhere |
+| Layer      | Technology                                 |
+| ---------- | ------------------------------------------ |
+| Backend    | Python 3, Flask 3.0                        |
+| Database   | PostgreSQL via Supabase (cloud)            |
+| ML         | Scikit-learn (Random Forest + TF-IDF)      |
+| Frontend   | HTML5, CSS3, Vanilla JavaScript            |
+| Charts     | Chart.js                                   |
+| Auth       | Werkzeug password hashing + Flask sessions |
+| Deployment | Railway / Render / PythonAnywhere          |
 
 ---
 
-## 📁 Project Structure
+## Project Structure
 
 ```
 wfiq/
@@ -156,43 +164,52 @@ wfiq/
 
 ---
 
-## 🚀 Local Setup (Step by Step)
+## Local Setup (Step by Step)
 
 ### Prerequisites
+
 - Python 3.10 or higher
 - pip
 - A Supabase account (free)
 
 ### Step 1 — Clone the repo
+
 ```bash
 git clone https://github.com/YOURNAME/workforce-iq.git
 cd workforce-iq
 ```
 
 ### Step 2 — Install dependencies
+
 ```bash
 pip install -r requirements.txt
 ```
 
 ### Step 3 — Set up Supabase database
+
 1. Go to supabase.com → create a new project
 2. Open SQL Editor → paste and run the contents of `schema.sql`
 3. Copy your database connection URI from Settings → Database
 
 ### Step 4 — Configure environment
+
 Create a `.env` file in the project root:
+
 ```
 SECRET_KEY=any-random-string-you-want
 DATABASE_URL=postgresql://postgres:YOUR_PASSWORD@db.xxxx.supabase.co:5432/postgres
 ```
 
 ### Step 5 — Seed demo passwords (run once only)
+
 ```bash
 python seed_passwords.py
 ```
+
 You should see 5 green checkmarks. If you see a DB error, check your DATABASE_URL.
 
 ### Step 6 — Run the app
+
 ```bash
 python app.py
 ```
@@ -201,55 +218,27 @@ Open `http://localhost:8080` in your browser.
 
 ---
 
-## 🔑 Demo Accounts
+## Demo Accounts
 
 All accounts use password: `password123`
 
-| Username | Role | Dashboard |
-|---|---|---|
-| `admin` | Admin | User management + all access |
-| `hr_manager` | HR Manager | Attrition, skill gaps, employee list |
-| `proj_manager` | Project Manager | Heatmap, project allocation |
-| `emp_john` | Employee | Profile, skills, projects |
-| `emp_sarah` | Employee | Profile, skills, projects |
+| Username       | Role            | Dashboard                            |
+| -------------- | --------------- | ------------------------------------ |
+| `admin`        | Admin           | User management + all access         |
+| `hr_manager`   | HR Manager      | Attrition, skill gaps, employee list |
+| `proj_manager` | Project Manager | Heatmap, project allocation          |
+| `emp_john`     | Employee        | Profile, skills, projects            |
+| `emp_sarah`    | Employee        | Profile, skills, projects            |
 
 ---
 
-## ☁️ Deployment on Railway
-
-### Step 1 — Push to GitHub
-```bash
-git init
-git add .
-git commit -m "initial commit"
-git remote add origin https://github.com/YOURNAME/workforce-iq.git
-git push -u origin main
-```
-
-### Step 2 — Deploy
-1. Go to railway.app → New Project → Deploy from GitHub
-2. Select your repo
-3. Add environment variables:
-   - `SECRET_KEY` → any random string
-   - `DATABASE_URL` → your Supabase URI
-4. Railway auto-detects Python and deploys
-
-### Step 3 — Update after changes
-```bash
-git add .
-git commit -m "describe your change"
-git push
-```
-Railway redeploys automatically in ~2 minutes.
-
----
-
-## 🔄 Retraining the ML Model
+## Retraining the ML Model
 
 The attrition model trains automatically on startup using synthetic data.
 The model file is saved at `ml/models/attrition_model.pkl`.
 
 To force a retrain (e.g. after adding more employees):
+
 ```bash
 # Delete the saved model so it retrains on next startup
 rm ml/models/attrition_model.pkl
@@ -262,9 +251,10 @@ only if you want to update the training distribution.
 
 ---
 
-## 📊 SDLC Model Used
+## SDLC Model Used
 
 **Agile** — developed in iterative sprints:
+
 1. Requirements & user stories
 2. Database schema design
 3. Authentication module
@@ -275,8 +265,15 @@ only if you want to update the training distribution.
 
 ---
 
-## 👤 Author
+## 👤 Authors
 
 - **Name:** M Naga Sai
 - **Reg No:** 23BCE0757
+
+- **Name:** Adarsh Anand
+- **Reg No:** 23BCE0807
+
+- **Name:** M Naga Sai
+- **Reg No:** 23BCE2047
+
 - **Course:** Software Engineering Lab
