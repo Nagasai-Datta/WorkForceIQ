@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block title %}Edit Profile — WorkforceIQ{% endblock %}
+{% block page_title %}Edit My Profile{% endblock %}
+{% block page_sub %}Update your personal and professional details{% endblock %}
+
+{% block content %}
+<div style="max-width:700px">
+<div class="tcard">
+  <div class="tcard-hdr"><span class="tcard-ttl">👤 Profile Information</span></div>
+  <div style="padding:22px">
+    <form method="POST" action="/employee/profile">
+      <div class="form-row">
+        <div class="fg"><label>Full Name</label><input type="text" name="name" value="{{ emp.name }}" required></div>
+        <div class="fg"><label>Department</label><input type="text" name="department" value="{{ emp.department or '' }}" placeholder="e.g. Engineering"></div>
+      </div>
+      <div class="form-row">
+        <div class="fg"><label>Designation</label><input type="text" name="designation" value="{{ emp.designation or '' }}" placeholder="e.g. Senior Developer"></div>
+        <div class="fg"><label>Years Experience</label><input type="number" name="years_experience" value="{{ emp.years_experience }}" min="0" max="50"></div>
+      </div>
+      <div class="form-row">
+        <div class="fg">
+          <label>Satisfaction Score (1=Low, 5=High)</label>
+          <input type="range" name="satisfaction_score" min="1" max="5" step="0.5"
+                 value="{{ emp.satisfaction_score }}" oninput="document.getElementById('satVal').textContent=this.value">
+          <span style="color:var(--accent);font-size:.85rem">Current: <span id="satVal">{{ emp.satisfaction_score }}</span>/5</span>
+        </div>
+        <div class="fg"><label>Monthly Hours (expected)</label><input type="number" name="monthly_hours" value="{{ emp.monthly_hours }}" min="40" max="300"></div>
+      </div>
+      <div style="margin-bottom:16px">
+        <label style="display:flex;align-items:center;gap:10px;cursor:pointer;font-size:.855rem">
+          <input type="checkbox" name="show_contact" {% if emp.show_contact %}checked{% endif %} style="width:16px;height:16px">
+          Show my contact info to non-HR staff
+        </label>
+      </div>
+      <div style="display:flex;gap:12px">
+        <button type="submit" class="btn btn-primary">Save Changes</button>
+        <a href="/employee/dashboard" class="btn btn-outline">Cancel</a>
+      </div>
+    </form>
+  </div>
+</div>
+</div>
+{% endblock %}

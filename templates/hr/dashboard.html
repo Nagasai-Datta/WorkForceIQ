@@ -1,0 +1,107 @@
+{% extends "base.html" %}
+{% block title %}HR Dashboard — WorkforceIQ{% endblock %}
+{% block page_title %}HR Dashboard{% endblock %}
+{% block page_sub %}Workforce health at a glance{% endblock %}
+
+{% block content %}
+<div class="stats-grid">
+  <div class="stat-card blue">
+    <div class="stat-icon">👥</div>
+    <div class="stat-val">{{ total_employees }}</div>
+    <div class="stat-lbl">Total Employees</div>
+  </div>
+  <div class="stat-card green">
+    <div class="stat-icon">😊</div>
+    <div class="stat-val">{{ avg_satisfaction }}/5</div>
+    <div class="stat-lbl">Avg Satisfaction</div>
+  </div>
+  <div class="stat-card red">
+    <div class="stat-icon">⚠️</div>
+    <div class="stat-val">{{ high_risk_count }}</div>
+    <div class="stat-lbl">High Attrition Risk</div>
+  </div>
+  <div class="stat-card purple">
+    <div class="stat-icon">🎯</div>
+    <div class="stat-val">{{ top_predictions|length }}</div>
+    <div class="stat-lbl">Monitored Employees</div>
+  </div>
+</div>
+
+<div class="chart-grid">
+  <div class="chart-card">
+    <div class="chart-ttl">Department Distribution</div>
+    <canvas id="deptChart" height="200"></canvas>
+  </div>
+  <div class="chart-card">
+    <div class="chart-ttl">Top Skills Coverage</div>
+    <canvas id="skillChart" height="200"></canvas>
+  </div>
+</div>
+
+<div class="tcard">
+  <div class="tcard-hdr">
+    <span class="tcard-ttl">⚠️ Top Attrition Risks (ML Prediction)</span>
+    <a href="/hr/analytics" class="btn btn-outline btn-sm">View All →</a>
+  </div>
+  <table>
+    <thead><tr>
+      <th>Employee</th><th>Department</th><th>Satisfaction</th>
+      <th>Allocation</th><th>Risk Level</th><th>Probability</th><th>Action</th>
+    </tr></thead>
+    <tbody>
+    {% for p in top_predictions %}
+    <tr>
+      <td><strong>{{ p.employee.name }}</strong></td>
+      <td>{{ p.employee.department or '—' }}</td>
+      <td>{{ p.employee.satisfaction_score }}/5</td>
+      <td>
+        {{ p.employee.total_allocation }}%
+        <div class="pbar-wrap"><div class="pbar-fill" style="width:{{ [p.employee.total_allocation,100]|min }}%;background:{% if p.employee.total_allocation > 80 %}var(--danger){% elif p.employee.total_allocation > 50 %}var(--warning){% else %}var(--success){% endif %}"></div></div>
+      </td>
+      <td><span class="badge badge-{{ p.risk }}">{{ p.risk }}</span></td>
+      <td><strong style="color:{% if p.risk=='High' %}var(--danger){% elif p.risk=='Medium' %}var(--warning){% else %}var(--success){% endif %}">{{ p.probability }}%</strong></td>
+      <td><a href="/hr/employee/{{ p.employee.employee_id }}" class="btn btn-outline btn-sm">View</a></td>
+    </tr>
+    {% else %}
+    <tr><td colspan="7" style="text-align:center;color:var(--muted);padding:30px">No employee data yet.</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const deptData  = {{ dept_data|safe }};
+const skillData = {{ skill_data|safe }};
+
+new Chart(document.getElementById('deptChart'), {
+  type: 'doughnut',
+  data: {
+    labels: deptData.map(d => d.dept),
+    datasets: [{ data: deptData.map(d => d.count),
+      backgroundColor: ['#4f8ef7','#7c5cfc','#34d399','#fbbf24','#ff5f7e','#06b6d4'],
+      borderWidth: 0 }]
+  },
+  options: { plugins: { legend: { labels: { color: '#6b7a99', font: { size: 11 } } } } }
+});
+
+new Chart(document.getElementById('skillChart'), {
+  type: 'bar',
+  data: {
+    labels: skillData.map(s => s.skill),
+    datasets: [{ label: 'Employees', data: skillData.map(s => s.count),
+      backgroundColor: 'rgba(79,142,247,0.5)', borderColor: '#4f8ef7',
+      borderWidth: 1, borderRadius: 4 }]
+  },
+  options: {
+    indexAxis: 'y',
+    plugins: { legend: { display: false } },
+    scales: {
+      x: { ticks: { color: '#6b7a99' }, grid: { color: 'rgba(255,255,255,0.05)' } },
+      y: { ticks: { color: '#6b7a99' }, grid: { display: false } }
+    }
+  }
+});
+</script>
+{% endblock %}

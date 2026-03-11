@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+{% block title %}Admin — WorkforceIQ{% endblock %}
+{% block page_title %}User Management{% endblock %}
+{% block page_sub %}Create, manage and assign roles to system users{% endblock %}
+
+{% block content %}
+<div class="stats-grid" style="margin-bottom:24px">
+  {% set role_colors = {'hr':'blue','project_manager':'purple','employee':'green','admin':'red'} %}
+  {% for rc in role_counts %}
+  <div class="stat-card {{ role_colors.get(rc.role,'blue') }}">
+    <div class="stat-icon">{% if rc.role=='hr' %}🧑‍💼{% elif rc.role=='project_manager' %}📊{% elif rc.role=='employee' %}👤{% else %}⚙️{% endif %}</div>
+    <div class="stat-val">{{ rc.c }}</div>
+    <div class="stat-lbl">{{ rc.role.replace('_',' ')|capitalize }}</div>
+  </div>
+  {% endfor %}
+</div>
+
+<div class="two-col">
+  <div class="tcard">
+    <div class="tcard-hdr"><span class="tcard-ttl">➕ Create New User</span></div>
+    <div style="padding:18px 22px">
+      <form method="POST" action="/admin/create-user">
+        <div class="form-row">
+          <div class="fg"><label>Username *</label><input type="text" name="username" required placeholder="e.g. emp_alice"></div>
+          <div class="fg"><label>Password *</label><input type="password" name="password" required placeholder="Min 8 chars"></div>
+        </div>
+        <div class="form-row">
+          <div class="fg"><label>Full Name</label><input type="text" name="name" placeholder="Alice Smith"></div>
+          <div class="fg"><label>Email *</label><input type="email" name="email" required placeholder="alice@company.com"></div>
+        </div>
+        <div class="form-row">
+          <div class="fg">
+            <label>Role</label>
+            <select name="role">
+              <option value="employee">Employee</option>
+              <option value="hr">HR Manager</option>
+              <option value="project_manager">Project Manager</option>
+              <option value="admin">Admin</option>
+            </select>
+          </div>
+          <div class="fg"><label>Department</label><input type="text" name="department" placeholder="Engineering"></div>
+        </div>
+        <button type="submit" class="btn btn-primary">Create User</button>
+      </form>
+    </div>
+  </div>
+
+  <div style="font-size:.82rem;color:var(--muted);background:var(--card);border:1px solid var(--border);border-radius:12px;padding:22px">
+    <div style="font-family:'Syne',sans-serif;font-weight:700;color:var(--text);margin-bottom:12px">ℹ️ Role Permissions</div>
+    <div style="margin-bottom:10px"><span class="badge role-hr" style="padding:3px 10px">HR</span><span style="margin-left:8px">Employee list, skill gaps, attrition analytics</span></div>
+    <div style="margin-bottom:10px"><span class="badge role-project_manager" style="padding:3px 10px;background:rgba(124,92,252,.15);color:var(--accent2)">PM</span><span style="margin-left:8px">Utilization heatmap, project allocation</span></div>
+    <div style="margin-bottom:10px"><span class="badge role-employee" style="padding:3px 10px;background:rgba(52,211,153,.15);color:var(--success)">Employee</span><span style="margin-left:8px">Own profile, skills, project assignments</span></div>
+    <div><span class="badge role-admin" style="padding:3px 10px;background:rgba(255,95,126,.15);color:var(--danger)">Admin</span><span style="margin-left:8px">Full access + user management</span></div>
+  </div>
+</div>
+
+<div class="tcard" style="margin-top:22px">
+  <div class="tcard-hdr"><span class="tcard-ttl">👥 All Users ({{ users|length }})</span></div>
+  <table>
+    <thead><tr>
+      <th>Username</th><th>Name</th><th>Role</th><th>Department</th>
+      <th>Change Role</th><th>Delete</th>
+    </tr></thead>
+    <tbody>
+    {% for u in users %}
+    <tr>
+      <td><strong>{{ u.username }}</strong></td>
+      <td style="color:var(--muted)">{{ u.name or '—' }}</td>
+      <td><span class="badge badge-{{ 'success' if u.role=='employee' else 'warning' if u.role=='project_manager' else 'danger' if u.role=='admin' else 'Low' }}">{{ u.role.replace('_',' ') }}</span></td>
+      <td style="color:var(--muted)">{{ u.department or '—' }}</td>
+      <td>
+        <form method="POST" action="/admin/change-role/{{ u.user_id }}" style="display:flex;gap:6px">
+          <select name="role" style="background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:6px;padding:4px 8px;color:var(--text);font-size:.78rem">
+            {% for r in ['hr','project_manager','employee','admin'] %}
+            <option value="{{ r }}" {% if u.role==r %}selected{% endif %}>{{ r.replace('_',' ') }}</option>
+            {% endfor %}
+          </select>
+          <button type="submit" class="btn btn-outline btn-sm">Set</button>
+        </form>
+      </td>
+      <td>
+        <form method="POST" action="/admin/delete-user/{{ u.user_id }}">
+          <button type="submit" class="btn btn-danger btn-sm"
+            onclick="return confirm('Delete {{ u.username }}? This is permanent.')"
+            {% if u.user_id == session.user_id %}disabled title="Can't delete yourself"{% endif %}>
+            Delete
+          </button>
+        </form>
+      </td>
+    </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

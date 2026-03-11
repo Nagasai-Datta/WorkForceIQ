@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+{% block title %}{{ emp.name }} — WorkforceIQ{% endblock %}
+{% block page_title %}{{ emp.name }}{% endblock %}
+{% block page_sub %}Employee Detail View{% endblock %}
+
+{% block content %}
+<div class="two-col">
+  <div>
+    <div class="profile-card">
+      <div class="p-hdr">
+        <div class="p-avatar">{{ emp.name[:2].upper() }}</div>
+        <div>
+          <div class="p-name">{{ emp.name }}</div>
+          <div class="p-role">{{ emp.designation or 'Employee' }} · {{ emp.department or 'No dept' }}</div>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+        <div>
+          <div style="font-size:.74rem;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Experience</div>
+          <div style="font-weight:600">{{ emp.years_experience }} years</div>
+        </div>
+        <div>
+          <div style="font-size:.74rem;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Monthly Hours</div>
+          <div style="font-weight:600">{{ emp.monthly_hours }} hrs</div>
+        </div>
+        <div>
+          <div style="font-size:.74rem;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Satisfaction</div>
+          <div style="font-weight:600;color:{% if emp.satisfaction_score >= 4 %}var(--success){% elif emp.satisfaction_score >= 3 %}var(--warning){% else %}var(--danger){% endif %}">
+            {{ emp.satisfaction_score }}/5
+          </div>
+        </div>
+        <div>
+          <div style="font-size:.74rem;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Active Projects</div>
+          <div style="font-weight:600">{{ emp.num_projects }}</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="tcard">
+      <div class="tcard-hdr"><span class="tcard-ttl">🧠 ML Attrition Risk</span></div>
+      <div style="padding:22px;text-align:center">
+        <div style="font-family:'Syne',sans-serif;font-size:3rem;font-weight:800;color:{% if risk=='High' %}var(--danger){% elif risk=='Medium' %}var(--warning){% else %}var(--success){% endif %}">
+          {{ prob }}%
+        </div>
+        <div style="margin-top:8px"><span class="badge badge-{{ risk }}" style="font-size:.85rem;padding:5px 16px">{{ risk }} Risk</span></div>
+        <div style="margin-top:14px;font-size:.82rem;color:var(--muted)">
+          {% if risk == 'High' %}⚠️ Immediate intervention recommended. Consider retention strategies.
+          {% elif risk == 'Medium' %}🔸 Monitor closely. Check satisfaction and workload.
+          {% else %}✅ Low attrition risk. Employee appears stable.{% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div>
+    <div class="tcard">
+      <div class="tcard-hdr"><span class="tcard-ttl">🎯 Skills</span></div>
+      <div style="padding:16px 22px">
+        {% for s in skills %}
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+          <span style="font-size:.855rem">{{ s.skill_name }}</span>
+          <div style="display:flex;align-items:center;gap:8px">
+            {% for i in range(1,6) %}
+            <div style="width:10px;height:10px;border-radius:50%;background:{% if i <= s.proficiency_level %}var(--accent){% else %}rgba(255,255,255,.1){% endif %}"></div>
+            {% endfor %}
+            <span style="font-size:.75rem;color:var(--muted);margin-left:4px">{{ s.proficiency_level }}/5</span>
+          </div>
+        </div>
+        {% else %}
+        <p style="color:var(--muted);font-size:.855rem">No skills tagged yet.</p>
+        {% endfor %}
+      </div>
+    </div>
+
+    <div class="tcard">
+      <div class="tcard-hdr"><span class="tcard-ttl">📁 Project Assignments</span></div>
+      <table>
+        <thead><tr><th>Project</th><th>Status</th><th>Allocation</th><th>Hours</th></tr></thead>
+        <tbody>
+        {% for a in assignments %}
+        <tr>
+          <td>{{ a.project_name }}</td>
+          <td><span class="badge badge-{{ a.status }}">{{ a.status }}</span></td>
+          <td>{{ a.allocation_percentage }}%</td>
+          <td>{{ a.hours_logged }}</td>
+        </tr>
+        {% else %}
+        <tr><td colspan="4" style="color:var(--muted);text-align:center;padding:20px">No assignments</td></tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<div style="margin-top:8px">
+  <a href="/hr/employees" class="btn btn-outline">← Back to Employees</a>
+</div>
+{% endblock %}

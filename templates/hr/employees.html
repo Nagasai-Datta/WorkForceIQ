@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+{% block title %}Employees — WorkforceIQ{% endblock %}
+{% block page_title %}Employee Inventory{% endblock %}
+{% block page_sub %}Search and filter by skill or department{% endblock %}
+
+{% block content %}
+<!-- Filter bar -->
+<div class="tcard" style="margin-bottom:20px">
+  <div class="tcard-hdr"><span class="tcard-ttl">🔍 Filter Employees</span></div>
+  <div style="padding:16px 22px">
+    <form method="GET" action="/hr/employees">
+      <div class="form-row">
+        <div class="fg">
+          <label>Skill</label>
+          <select name="skill">
+            <option value="">All Skills</option>
+            {% for s in all_skills %}
+            <option value="{{ s.skill_name }}" {% if skill_filter==s.skill_name %}selected{% endif %}>{{ s.skill_name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="fg">
+          <label>Department</label>
+          <select name="dept">
+            <option value="">All Departments</option>
+            {% for d in departments %}
+            <option value="{{ d.department }}" {% if dept_filter==d.department %}selected{% endif %}>{{ d.department }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="fg" style="justify-content:flex-end;max-width:120px">
+          <label>&nbsp;</label>
+          <button type="submit" class="btn btn-primary">Search</button>
+        </div>
+        {% if skill_filter or dept_filter %}
+        <div class="fg" style="justify-content:flex-end;max-width:100px">
+          <label>&nbsp;</label>
+          <a href="/hr/employees" class="btn btn-outline">Clear</a>
+        </div>
+        {% endif %}
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="tcard">
+  <div class="tcard-hdr">
+    <span class="tcard-ttl">👥 Employees ({{ employees|length }})</span>
+  </div>
+  <table>
+    <thead><tr>
+      <th>Name</th><th>Department</th><th>Designation</th>
+      <th>Skills</th><th>Allocation</th><th>Projects</th><th>Action</th>
+    </tr></thead>
+    <tbody>
+    {% for emp in employees %}
+    <tr>
+      <td><strong>{{ emp.name }}</strong></td>
+      <td>{{ emp.department or '—' }}</td>
+      <td style="color:var(--muted)">{{ emp.designation or '—' }}</td>
+      <td>
+        {% for s in emp.skills[:4] %}<span class="skill-chip">{{ s.skill_name }}</span>{% endfor %}
+        {% if emp.skills|length > 4 %}<span style="color:var(--muted);font-size:.72rem">+{{ emp.skills|length - 4 }} more</span>{% endif %}
+        {% if not emp.skills %}<span style="color:var(--muted);font-size:.8rem">No skills tagged</span>{% endif %}
+      </td>
+      <td>
+        <span style="font-weight:600;color:{% if emp.total_allocation > 80 %}var(--danger){% elif emp.total_allocation > 50 %}var(--warning){% else %}var(--success){% endif %}">
+          {{ emp.total_allocation }}%
+        </span>
+        <div class="pbar-wrap"><div class="pbar-fill" style="width:{{ [emp.total_allocation,100]|min }}%;background:{% if emp.total_allocation>80 %}var(--danger){% elif emp.total_allocation>50 %}var(--warning){% else %}var(--success){% endif %}"></div></div>
+      </td>
+      <td style="color:var(--muted)">{{ emp.num_projects }}</td>
+      <td><a href="/hr/employee/{{ emp.employee_id }}" class="btn btn-outline btn-sm">View</a></td>
+    </tr>
+    {% else %}
+    <tr><td colspan="7" style="text-align:center;color:var(--muted);padding:30px">No employees match this filter.</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

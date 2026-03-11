@@ -1,0 +1,191 @@
+{% extends "base.html" %}
+{% block title %}My Dashboard — WorkforceIQ{% endblock %}
+{% block page_title %}My Dashboard{% endblock %}
+{% block page_sub %}Your profile, skills & project assignments{% endblock %}
+
+{% block content %}
+{% if emp %}
+<div class="two-col">
+  <div>
+    <!-- Profile Card -->
+    <div class="profile-card">
+      <div class="p-hdr">
+        <div class="p-avatar">{{ emp.name[:2].upper() }}</div>
+        <div>
+          <div class="p-name">{{ emp.name }}</div>
+          <div class="p-role">{{ emp.designation or 'Employee' }} · {{ emp.department or 'No dept' }}</div>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+        <div>
+          <div style="font-size:.72rem;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px">Experience</div>
+          <strong>{{ emp.years_experience }} yrs</strong>
+        </div>
+        <div>
+          <div style="font-size:.72rem;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px">Monthly Hours</div>
+          <strong>{{ emp.monthly_hours }} hrs</strong>
+        </div>
+        <div>
+          <div style="font-size:.72rem;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px">Satisfaction</div>
+          <strong style="color: {{ 'var(--success)' if emp.satisfaction_score>=4 else 'var(--warning)' if emp.satisfaction_score>=3 else 'var(--danger)' }};">
+            {{ emp.satisfaction_score }}/5
+          </strong>
+        </div>
+        <div>
+          <div style="font-size:.72rem;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px">Current Load</div>
+          <strong style="color: {{ 'var(--danger)' if emp.total_allocation>80 else 'var(--warning)' if emp.total_allocation>50 else 'var(--success)' }};">
+            {{ emp.total_allocation }}%
+          </strong>
+        </div>
+      </div>
+      <div style="margin-top:16px">
+        <a href="/employee/profile" class="btn btn-outline btn-sm">Edit Profile</a>
+      </div>
+    </div>
+
+    <!-- My Projects -->
+    <div class="tcard">
+      <div class="tcard-hdr"><span class="tcard-ttl">📁 My Projects</span></div>
+      {% if assignments %}
+      <table>
+        <thead><tr><th>Project</th><th>Status</th><th>My Allocation</th><th>Hours</th></tr></thead>
+        <tbody>
+        {% for a in assignments %}
+        <tr>
+          <td><strong>{{ a.project_name }}</strong></td>
+          <td><span class="badge badge-{{ a.status }}">{{ a.status }}</span></td>
+          <td><span style="color:var(--accent);font-weight:600">{{ a.allocation_percentage }}%</span></td>
+          <td style="color:var(--muted)">{{ a.hours_logged }} hrs</td>
+        </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+      {% else %}
+      <div style="padding:24px;color:var(--muted);font-size:.855rem;text-align:center">Not assigned to any projects yet.</div>
+      {% endif %}
+    </div>
+  </div>
+
+  <div>
+    <!-- My Skills -->
+    <div class="tcard" style="margin-bottom:22px">
+      <div class="tcard-hdr"><span class="tcard-ttl">🎯 My Skills</span></div>
+      <div style="padding:16px 22px">
+        {% for s in skills %}
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+          <span style="font-size:.855rem">{{ s.skill_name }}</span>
+          <div style="display:flex;align-items:center;gap:8px">
+            {% for i in range(1,6) %}
+            <div style="width:9px;height:9px;border-radius:50%;background:{% if i<=s.proficiency_level %}var(--accent){% else %}rgba(255,255,255,.1){% endif %}"></div>
+            {% endfor %}
+            <form method="POST" action="/employee/skills/remove/{{ s.skill_id }}" style="display:inline;margin-left:4px">
+              <button type="submit" class="btn btn-danger btn-sm" style="padding:2px 7px;font-size:.68rem">✕</button>
+            </form>
+          </div>
+        </div>
+        {% else %}
+        <p style="color:var(--muted);font-size:.855rem">No skills added yet. Add below or use the resume extractor!</p>
+        {% endfor %}
+      </div>
+      <!-- Add skill manually -->
+      <div style="padding:0 22px 16px;border-top:1px solid var(--border);padding-top:14px;margin-top:4px">
+        <div style="font-size:.74rem;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px">Add Skill Manually</div>
+        <form method="POST" action="/employee/skills/add" style="display:flex;gap:10px;flex-wrap:wrap">
+          <div class="fg">
+            <select name="skill_id">
+              {% for s in range(1,15) %}<option value="{{ s }}">Skill {{ s }}</option>{% endfor %}
+            </select>
+          </div>
+          <div class="fg" style="max-width:100px">
+            <select name="proficiency_level">
+              {% for i in [1,2,3,4,5] %}<option value="{{ i }}">Level {{ i }}</option>{% endfor %}
+            </select>
+          </div>
+          <button type="submit" class="btn btn-primary btn-sm">Add</button>
+        </form>
+      </div>
+    </div>
+
+    <!-- TF-IDF Resume Extractor -->
+    <div class="tcard">
+      <div class="tcard-hdr"><span class="tcard-ttl">🤖 AI Skill Extractor (TF-IDF)</span></div>
+      <div style="padding:16px 22px">
+        <p style="font-size:.82rem;color:var(--muted);margin-bottom:14px">
+          Paste your resume text below. Our TF-IDF model will automatically identify your skills.
+        </p>
+        <div class="fg" style="margin-bottom:14px">
+          <label>Resume Text</label>
+          <textarea id="resumeText" rows="6" placeholder="Paste your resume or any text describing your experience...
+e.g. 'Experienced Python developer with 5 years building Django REST APIs, worked with PostgreSQL databases, machine learning using scikit-learn, Docker containerisation...'"></textarea>
+        </div>
+        <button onclick="extractSkills()" class="btn btn-primary" style="width:100%">Extract Skills with TF-IDF →</button>
+        <div id="extractResult" style="margin-top:14px;display:none">
+          <div style="font-size:.78rem;color:var(--muted);margin-bottom:8px">Detected skills — click to add:</div>
+          <div id="skillTags"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% else %}
+<div style="text-align:center;padding:60px;color:var(--muted)">
+  <div style="font-size:2rem;margin-bottom:12px">👤</div>
+  <p>No employee profile found. Contact admin.</p>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Build proper skill selector from DB
+const allSkillsSelect = document.querySelector('select[name="skill_id"]');
+fetch('/employee/skills-list').then(r=>r.json()).then(data=>{
+  allSkillsSelect.innerHTML = data.skills.map(s=>`<option value="${s.id}">${s.name}</option>`).join('');
+}).catch(()=>{});
+
+async function extractSkills() {
+  const text = document.getElementById('resumeText').value.trim();
+  if (!text) { alert('Please paste some resume text first.'); return; }
+
+  const btn = event.target;
+  btn.textContent = 'Extracting...';
+  btn.disabled = true;
+
+  const form = new FormData();
+  form.append('resume_text', text);
+
+  try {
+    const res  = await fetch('/employee/extract-skills', { method: 'POST', body: form });
+    const data = await res.json();
+
+    const container = document.getElementById('skillTags');
+    container.innerHTML = '';
+    document.getElementById('extractResult').style.display = 'block';
+
+    if (!data.skills.length) {
+      container.innerHTML = '<span style="color:var(--muted);font-size:.82rem">No matching skills found. Try adding more detail to your text.</span>';
+    } else {
+      data.skills.forEach(s => {
+        const chip = document.createElement('span');
+        chip.className = 'skill-chip';
+        chip.style.cursor = 'pointer';
+        chip.style.userSelect = 'none';
+        chip.textContent = '+ ' + s.name;
+        chip.onclick = () => {
+          const f = document.createElement('form');
+          f.method = 'POST'; f.action = '/employee/skills/add';
+          f.innerHTML = `<input name="skill_id" value="${s.id}"><input name="proficiency_level" value="3">`;
+          document.body.appendChild(f); f.submit();
+        };
+        container.appendChild(chip);
+      });
+    }
+  } catch(e) {
+    alert('Extraction failed: ' + e.message);
+  }
+  btn.textContent = 'Extract Skills with TF-IDF →';
+  btn.disabled = false;
+}
+</script>
+{% endblock %}
