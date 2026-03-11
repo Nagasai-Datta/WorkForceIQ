@@ -273,7 +273,7 @@ only if you want to update the training distribution.
 - **Name:** Adarsh Anand
 - **Reg No:** 23BCE0807
 
-- **Name:** M Naga Sai
+- **Name:** Suhani Agarwal
 - **Reg No:** 23BCE2047
 
 - **Course:** Software Engineering Lab
