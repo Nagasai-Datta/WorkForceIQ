@@ -1,0 +1,125 @@
+{% extends "base.html" %}
+{% block title %}{{ emp.name }} — WorkforceIQ{% endblock %}
+{% block page_title %}{{ emp.name }}{% endblock %}
+{% block page_sub %}{{ emp.designation or 'Employee' }} · {{ emp.department or 'No Department' }}{% endblock %}
+
+{% block content %}
+<div style="margin-bottom:18px">
+  <a href="{{ url_for('hr.employees') }}" class="btn btn-outline btn-sm">← All Employees</a>
+</div>
+
+<div class="two-col">
+  <div>
+    <div class="profile-card" style="margin-bottom:22px">
+      <div class="p-hdr">
+        <div class="p-avatar">{{ emp.name[:2].upper() }}</div>
+        <div>
+          <div class="p-name">{{ emp.name }}</div>
+          <div class="p-role">{{ emp.designation or 'Employee' }} · {{ emp.department or '—' }}</div>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+        <div><div style="font-size:.72rem;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px">Experience</div><strong>{{ emp.years_experience }} yrs</strong></div>
+        <div><div style="font-size:.72rem;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px">Monthly Hours</div><strong>{{ emp.monthly_hours }} hrs</strong></div>
+        <div><div style="font-size:.72rem;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px">Satisfaction</div>
+          <strong style="color:{{ 'var(--success)' if emp.satisfaction_score>=4 else 'var(--warning)' if emp.satisfaction_score>=3 else 'var(--danger)' }}">{{ emp.satisfaction_score }}/5</strong></div>
+        <div><div style="font-size:.72rem;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px">Allocation</div>
+          <strong style="color:{{ 'var(--danger)' if emp.total_allocation>80 else 'var(--warning)' if emp.total_allocation>50 else 'var(--success)' }}">{{ emp.total_allocation }}%</strong></div>
+      </div>
+    </div>
+
+    <!-- Attrition Card (LLM-powered) -->
+    <div class="tcard" style="margin-bottom:22px">
+      <div class="tcard-hdr">
+        <span class="tcard-ttl">🧠 Attrition Risk
+          <span style="font-size:.7rem;color:var(--muted);font-weight:400;margin-left:8px">powered by Groq / LLaMA 3.1</span>
+        </span>
+      </div>
+      <div style="padding:20px 24px">
+        <div style="display:flex;align-items:center;gap:16px;margin-bottom:18px">
+          <div style="font-size:2.4rem;font-weight:700;
+            color:{% if risk=='High' %}var(--danger){% elif risk=='Medium' %}var(--warning){% else %}var(--success){% endif %}">
+            {{ prob|int }}%
+          </div>
+          <div>
+            <span class="badge badge-{% if risk=='High' %}Paused{% elif risk=='Medium' %}Validating{% else %}Active{% endif %}"
+                  style="font-size:.85rem;padding:4px 14px">{{ risk }} Risk</span>
+            <div style="font-size:.76rem;color:var(--muted);margin-top:5px">LLM-assessed attrition probability</div>
+          </div>
+        </div>
+        <div style="background:rgba(255,255,255,.08);border-radius:8px;height:8px;margin-bottom:18px">
+          <div style="background:{% if risk=='High' %}var(--danger){% elif risk=='Medium' %}var(--warning){% else %}var(--success){% endif %};
+            height:100%;border-radius:8px;width:{{ [prob|int, 100]|min }}%;transition:width .6s ease"></div>
+        </div>
+
+        {% if explanation %}
+        <div style="font-size:.76rem;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:12px">Key Risk Drivers (LLM Analysis)</div>
+        {% for ex in explanation %}
+        {% set label = ex.factor if ex.factor is defined else ex.feature %}
+        {% set dir = ex.direction %}
+        <div style="display:flex;align-items:center;justify-content:space-between;
+                    margin-bottom:9px;padding:8px 12px;border-radius:8px;
+                    background:rgba({% if 'increases' in dir %}239,68,68{% else %}34,197,94{% endif %},.08);
+                    border:1px solid rgba({% if 'increases' in dir %}239,68,68{% else %}34,197,94{% endif %},.18)">
+          <div>
+            <span style="font-size:.84rem;font-weight:500">{{ label }}</span>
+            <span style="font-size:.72rem;color:var(--muted);margin-left:6px">· {{ dir }}</span>
+          </div>
+          <span style="font-size:.78rem;font-weight:600;padding:2px 8px;border-radius:6px;
+            background:rgba({% if 'increases' in dir %}239,68,68{% else %}34,197,94{% endif %},.15);
+            color:{% if 'increases' in dir %}var(--danger){% else %}var(--success){% endif %}">
+            {{ ex.impact }}
+          </span>
+        </div>
+        {% endfor %}
+        {% endif %}
+
+        {% if suggestion %}
+        <div style="margin-top:16px;padding:12px 14px;border-radius:10px;
+                    background:rgba(124,58,237,.1);border:1px solid rgba(124,58,237,.25)">
+          <div style="font-size:.72rem;color:#a78bfa;text-transform:uppercase;letter-spacing:.06em;margin-bottom:5px">💡 HR Suggestion</div>
+          <p style="font-size:.84rem;color:var(--text);margin:0">{{ suggestion }}</p>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Assignments -->
+    <div class="tcard">
+      <div class="tcard-hdr"><span class="tcard-ttl">📁 Project Assignments</span></div>
+      {% if assignments %}
+      <table>
+        <thead><tr><th>Project</th><th>Status</th><th>Allocation</th><th>Hours</th></tr></thead>
+        <tbody>{% for a in assignments %}
+        <tr>
+          <td><strong>{{ a.project_name }}</strong></td>
+          <td><span class="badge badge-{{ a.status }}">{{ a.status }}</span></td>
+          <td><span style="color:var(--accent);font-weight:600">{{ a.allocation_percentage }}%</span></td>
+          <td style="color:var(--muted)">{{ a.hours_logged }} hrs</td>
+        </tr>{% endfor %}</tbody>
+      </table>
+      {% else %}
+      <div style="padding:24px;text-align:center;color:var(--muted);font-size:.855rem">No assignments.</div>
+      {% endif %}
+    </div>
+  </div>
+
+  <div>
+    <div class="tcard">
+      <div class="tcard-hdr"><span class="tcard-ttl">🎯 Approved Skills</span></div>
+      <div style="padding:16px 22px">
+        {% for s in skills %}
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+          <span style="font-size:.855rem">{{ s.skill_name }}</span>
+          <div style="display:flex;gap:5px">{% for i in range(1,6) %}
+            <div style="width:9px;height:9px;border-radius:50%;background:{% if i<=s.proficiency_level %}var(--accent){% else %}rgba(255,255,255,.1){% endif %}"></div>
+          {% endfor %}</div>
+        </div>
+        {% else %}
+        <p style="color:var(--muted);font-size:.855rem">No approved skills yet.</p>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,25 @@
+# ── Web Framework ─────────────────────────────────────────────────────────────
+flask==3.0.0
+werkzeug==3.0.1
+
+# ── Database (MySQL local) ────────────────────────────────────────────────────
+mysql-connector-python==8.3.0
+
+# ── Environment ───────────────────────────────────────────────────────────────
+python-dotenv==1.0.0
+
+# ── LLM / AI  (replaces XGBoost + sklearn) ───────────────────────────────────
+groq==1.1.2          # Free Groq API — get key at console.groq.com
+
+# ── PDF Parsing ───────────────────────────────────────────────────────────────
+pdfplumber==0.11.0
+pypdf==4.1.0
+
+# ── Testing ───────────────────────────────────────────────────────────────────
+selenium==4.41.0
+pytest==8.3.5
+pytest-html==4.1.1     # HTML test reports
+webdriver-manager==4.0.2   # auto-downloads chromedriver
+
+# ── Production Server ─────────────────────────────────────────────────────────
+gunicorn==21.2.0

@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>WorkForce IQ — Sign In</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+<style>
+  :root {
+    --bg: #0a0f1e;
+    --panel: #111827;
+    --border: rgba(255,255,255,0.07);
+    --accent: #4f8ef7;
+    --accent2: #7c5cfc;
+    --text: #f0f4ff;
+    --muted: #6b7a99;
+    --error: #ff5f7e;
+    --success: #34d399;
+  }
+
+  *, *::before, *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    overflow: hidden;
+  }
+
+  .left {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 60px;
+    position: relative;
+    background: linear-gradient(135deg, #0d1526 0%, #0a0f1e 60%, #10182e 100%);
+  }
+
+  .left::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(ellipse at 20% 50%, rgba(79,142,247,0.12) 0%, transparent 60%),
+      radial-gradient(ellipse at 80% 20%, rgba(124,92,252,0.1) 0%, transparent 50%);
+    pointer-events: none;
+  }
+
+  .grid-overlay {
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px);
+    background-size: 48px 48px;
+    pointer-events: none;
+  }
+
+  .brand {
+    position: relative;
+    z-index: 1;
+  }
+
+  .brand-logo {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 60px;
+  }
+
+  .logo-icon {
+    width: 42px;
+    height: 42px;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+  }
+
+  .logo-text {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 1.2rem;
+    letter-spacing: -0.02em;
+  }
+
+  .logo-text span {
+    color: var(--accent);
+  }
+
+  .brand h1 {
+    font-family: 'Syne', sans-serif;
+    font-size: clamp(2rem, 3.5vw, 3rem);
+    font-weight: 800;
+    line-height: 1.15;
+    letter-spacing: -0.03em;
+    margin-bottom: 20px;
+  }
+
+  .brand h1 em {
+    font-style: normal;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .brand p {
+    color: var(--muted);
+    font-size: 1rem;
+    line-height: 1.7;
+    max-width: 380px;
+    margin-bottom: 48px;
+  }
+
+  .stat-row {
+    display: flex;
+    gap: 32px;
+    flex-wrap: wrap;
+  }
+
+  .stat {
+    padding: 4px 0;
+  }
+
+  .stat-num {
+    font-family: 'Syne', sans-serif;
+    font-size: 1.6rem;
+    font-weight: 800;
+    color: var(--accent);
+  }
+
+  .stat-label {
+    font-size: 0.8rem;
+    color: var(--muted);
+    margin-top: 2px;
+  }
+
+  .right {
+    width: 440px;
+    flex-shrink: 0;
+    background: var(--panel);
+    border-left: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 60px 48px;
+  }
+
+  .form-header {
+    margin-bottom: 36px;
+  }
+
+  .form-header h2 {
+    font-family: 'Syne', sans-serif;
+    font-size: 1.7rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    margin-bottom: 6px;
+  }
+
+  .form-header p {
+    color: var(--muted);
+    font-size: 0.9rem;
+  }
+
+  .role-pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 28px;
+  }
+
+  .pill {
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    border: 1px solid var(--border);
+    color: var(--muted);
+  }
+
+  .pill.hr {
+    border-color: rgba(79,142,247,0.4);
+    color: var(--accent);
+  }
+
+  .pill.pm {
+    border-color: rgba(124,92,252,0.4);
+    color: var(--accent2);
+  }
+
+  .pill.emp {
+    border-color: rgba(52,211,153,0.4);
+    color: var(--success);
+  }
+
+  .pill.admin {
+    border-color: rgba(255,95,126,0.4);
+    color: var(--error);
+  }
+
+  .form-group {
+    margin-bottom: 20px;
+  }
+
+  .form-group label {
+    display: block;
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: 8px;
+  }
+
+  .form-group input {
+    width: 100%;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 13px 16px;
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.95rem;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+
+  .form-group input:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(79,142,247,0.12);
+  }
+
+  .form-group input::placeholder {
+    color: var(--muted);
+  }
+
+  .error-box {
+    background: rgba(255,95,126,0.1);
+    border: 1px solid rgba(255,95,126,0.3);
+    border-radius: 8px;
+    padding: 12px 16px;
+    font-size: 0.875rem;
+    color: var(--error);
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .btn-login {
+    width: 100%;
+    padding: 14px;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    border: none;
+    border-radius: 8px;
+    color: #fff;
+    font-family: 'Syne', sans-serif;
+    font-size: 0.95rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    cursor: pointer;
+    transition: opacity 0.2s, transform 0.15s;
+    margin-top: 4px;
+  }
+
+  .btn-login:hover {
+    opacity: 0.9;
+    transform: translateY(-1px);
+  }
+
+  .btn-login:active {
+    transform: translateY(0);
+  }
+
+  .demo-hint {
+    margin-top: 28px;
+    padding-top: 24px;
+    border-top: 1px solid var(--border);
+  }
+
+  .demo-hint p {
+    font-size: 0.78rem;
+    color: var(--muted);
+    margin-bottom: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+
+  .demo-accounts {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .demo-account {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.82rem;
+    padding: 7px 10px;
+    background: rgba(255,255,255,0.03);
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background 0.15s;
+    user-select: none;
+  }
+
+  .demo-account:hover {
+    background: rgba(255,255,255,0.06);
+  }
+
+  .demo-account .u {
+    color: var(--text);
+    font-weight: 500;
+  }
+
+  .demo-account .r {
+    color: var(--muted);
+    font-size: 0.75rem;
+  }
+
+  @media (max-width: 768px) {
+    .left {
+      display: none;
+    }
+
+    .right {
+      width: 100%;
+      border-left: none;
+      padding: 40px 24px;
+    }
+  }
+</style>
+</head>
+<body>
+
+<div class="left">
+  <div class="grid-overlay"></div>
+  <div class="brand">
+    <div class="brand-logo">
+      <div class="logo-icon">⚡</div>
+      <div class="logo-text">Workforce<span>IQ</span></div>
+    </div>
+    <h1>Smart workforce,<br/><em>smarter decisions.</em></h1>
+    <p>An AI-powered platform for skill analytics, resource optimization, and attrition prediction — built for modern enterprises.</p>
+    <div class="stat-row">
+      <div class="stat">
+        <div class="stat-num">360°</div>
+        <div class="stat-label">Employee Visibility</div>
+      </div>
+      <div class="stat">
+        <div class="stat-num">ML</div>
+        <div class="stat-label">Attrition Prediction</div>
+      </div>
+      <div class="stat">
+        <div class="stat-num">Live</div>
+        <div class="stat-label">Utilization Heatmap</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="right">
+  <div class="form-header">
+    <h2>Welcome back</h2>
+    <p>Sign in to your dashboard</p>
+  </div>
+
+  <div class="role-pills">
+    <span class="pill hr">HR Manager</span>
+    <span class="pill pm">Project Manager</span>
+    <span class="pill emp">Employee</span>
+    <span class="pill admin">Admin</span>
+  </div>
+
+  {% if error %}
+  <div class="error-box">⚠ {{ error }}</div>
+  {% endif %}
+
+  <form method="POST" action="/login">
+    <div class="form-group">
+      <label>Username</label>
+      <input type="text" name="username" id="username" placeholder="Enter your username" autocomplete="username" required/>
+    </div>
+
+    <div class="form-group">
+      <label>Password</label>
+      <input type="password" name="password" id="password" placeholder="Enter your password" autocomplete="current-password" required/>
+    </div>
+
+    <button type="submit" class="btn-login">Sign In →</button>
+  </form>
+
+  <div class="demo-hint">
+    <p>Demo Accounts</p>
+    <div class="demo-accounts">
+      <div class="demo-account" onclick="fillLogin('admin', 'Admin@123')">
+        <span class="u">admin</span>
+        <span class="r">Admin</span>
+      </div>
+      <div class="demo-account" onclick="fillLogin('hr1', 'Hr@123456')">
+        <span class="u">hr1</span>
+        <span class="r">HR Manager</span>
+      </div>
+      <div class="demo-account" onclick="fillLogin('pm1', 'Pm@123456')">
+        <span class="u">pm1</span>
+        <span class="r">Project Manager</span>
+      </div>
+      <div class="demo-account" onclick="fillLogin('emp1', 'Emp@123456')">
+        <span class="u">emp1</span>
+        <span class="r">Employee</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+function fillLogin(username, password) {
+  document.getElementById('username').value = username;
+  document.getElementById('password').value = password;
+}
+</script>
+
+</body>
+</html>

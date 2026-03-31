@@ -1,0 +1,148 @@
+{% extends "base.html" %}
+{% block title %}Skill Approvals — WorkforceIQ{% endblock %}
+{% block page_title %}Skill Approval Queue{% endblock %}
+{% block page_sub %}Review and approve employee skill requests before they go live{% endblock %}
+
+{% block content %}
+<div style="display:flex;gap:18px;margin-bottom:22px">
+  <a href="{{ url_for('hr.dashboard') }}" class="btn btn-outline btn-sm">← Back to Dashboard</a>
+</div>
+
+<!-- ── Pending Requests ────────────────────────────────────── -->
+<div class="tcard" style="margin-bottom:26px">
+  <div class="tcard-hdr">
+    <span class="tcard-ttl">⏳ Pending Requests
+      {% if pending %}
+      <span style="background:var(--danger);color:#fff;border-radius:12px;
+                   padding:2px 10px;font-size:.72rem;margin-left:8px">
+        {{ pending|length }}
+      </span>
+      {% endif %}
+    </span>
+  </div>
+
+  {% if pending %}
+  <table>
+    <thead>
+      <tr>
+        <th>Employee</th><th>Dept</th><th>Skill</th>
+        <th>Level</th><th>Submitted</th><th style="text-align:center">Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+    {% for p in pending %}
+    <tr>
+      <td><strong>{{ p.employee_name }}</strong></td>
+      <td style="color:var(--muted);font-size:.82rem">{{ p.department or '—' }}</td>
+      <td>
+        <span style="background:rgba(124,58,237,.18);color:#a78bfa;
+                     border-radius:6px;padding:2px 10px;font-size:.8rem">
+          {{ p.skill_name }}
+        </span>
+      </td>
+      <td>
+        {% for i in range(1,6) %}
+        <span style="color:{% if i <= p.proficiency_level %}var(--accent){% else %}rgba(255,255,255,.15){% endif %};
+                     font-size:1rem">●</span>
+        {% endfor %}
+      </td>
+      <td style="color:var(--muted);font-size:.8rem">
+        {{ p.submitted_at.strftime('%d %b %Y') if p.submitted_at else '—' }}
+      </td>
+      <td style="text-align:center">
+        <!-- Approve -->
+        <form method="POST" action="{{ url_for('hr.approve_skill', pid=p.pending_id) }}"
+              style="display:inline" id="approve-{{ p.pending_id }}">
+          <input type="hidden" name="note" value="Verified and approved">
+          <button type="submit" class="btn btn-sm"
+                  style="background:var(--success);color:#fff;margin-right:6px"
+                  onclick="return confirm('Approve {{ p.skill_name }} for {{ p.employee_name }}?')">
+            ✓ Approve
+          </button>
+        </form>
+        <!-- Reject with modal -->
+        <button class="btn btn-danger btn-sm"
+                onclick="showRejectModal({{ p.pending_id }}, '{{ p.employee_name }}', '{{ p.skill_name }}')">
+          ✕ Reject
+        </button>
+      </td>
+    </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <div style="padding:40px;text-align:center;color:var(--muted)">
+    <div style="font-size:2rem;margin-bottom:10px">✅</div>
+    <div style="font-size:.9rem">No pending skill requests — all caught up!</div>
+  </div>
+  {% endif %}
+</div>
+
+<!-- ── Recent Decisions ───────────────────────────────────── -->
+<div class="tcard">
+  <div class="tcard-hdr"><span class="tcard-ttl">📋 Recent Decisions</span></div>
+  {% if recent %}
+  <table>
+    <thead>
+      <tr><th>Employee</th><th>Skill</th><th>Decision</th><th>Reviewed By</th><th>Date</th><th>Note</th></tr>
+    </thead>
+    <tbody>
+    {% for r in recent %}
+    <tr>
+      <td>{{ r.employee_name }}</td>
+      <td style="font-size:.82rem">{{ r.skill_name }}</td>
+      <td>
+        <span class="badge badge-{% if r.status == 'approved' %}Active{% else %}Paused{% endif %}"
+              style="font-size:.72rem">
+          {{ r.status|capitalize }}
+        </span>
+      </td>
+      <td style="color:var(--muted);font-size:.8rem">{{ r.reviewed_by_name or '—' }}</td>
+      <td style="color:var(--muted);font-size:.8rem">
+        {{ r.reviewed_at.strftime('%d %b %Y') if r.reviewed_at else '—' }}
+      </td>
+      <td style="color:var(--muted);font-size:.8rem;max-width:160px">{{ r.review_note or '—' }}</td>
+    </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <div style="padding:30px;text-align:center;color:var(--muted);font-size:.855rem">
+    No decisions recorded yet.
+  </div>
+  {% endif %}
+</div>
+
+<!-- ── Reject Modal ───────────────────────────────────────── -->
+<div id="rejectModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);
+     z-index:9999;align-items:center;justify-content:center">
+  <div style="background:var(--card);border:1px solid var(--border);border-radius:14px;
+              padding:28px;max-width:420px;width:90%">
+    <h3 style="margin:0 0 6px;font-size:1.05rem">Reject Skill Request</h3>
+    <p id="rejectDesc" style="color:var(--muted);font-size:.84rem;margin-bottom:18px"></p>
+    <form method="POST" id="rejectForm">
+      <div class="fg" style="margin-bottom:16px">
+        <label>Reason / Note (optional)</label>
+        <textarea name="note" id="rejectNote" rows="3"
+                  placeholder="e.g. Please provide evidence or certification…"></textarea>
+      </div>
+      <div style="display:flex;gap:10px;justify-content:flex-end">
+        <button type="button" class="btn btn-outline" onclick="closeRejectModal()">Cancel</button>
+        <button type="submit" class="btn btn-danger">Reject</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+function showRejectModal(pid, empName, skillName) {
+  document.getElementById('rejectDesc').textContent =
+    `Rejecting "${skillName}" for ${empName}. You can add a reason below.`;
+  document.getElementById('rejectForm').action = `/hr/skill-approvals/${pid}/reject`;
+  document.getElementById('rejectModal').style.display = 'flex';
+}
+function closeRejectModal() {
+  document.getElementById('rejectModal').style.display = 'none';
+}
+</script>
+{% endblock %}

@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+{% block title %}PM Dashboard — WorkforceIQ{% endblock %}
+{% block page_title %}Project Manager Dashboard{% endblock %}
+{% block page_sub %}Resource utilization & allocation overview{% endblock %}
+
+{% block content %}
+<div class="stats-grid">
+  <div class="stat-card blue">
+    <div class="stat-icon">👥</div>
+    <div class="stat-val">{{ total_employees }}</div>
+    <div class="stat-lbl">Total Employees</div>
+  </div>
+  <div class="stat-card green">
+    <div class="stat-icon">📁</div>
+    <div class="stat-val">{{ active_projects }}</div>
+    <div class="stat-lbl">Active Projects</div>
+  </div>
+  <div class="stat-card red">
+    <div class="stat-icon">🔴</div>
+    <div class="stat-val">{{ overloaded }}</div>
+    <div class="stat-lbl">Overloaded (&gt;80%)</div>
+  </div>
+  <div class="stat-card yellow">
+    <div class="stat-icon">💤</div>
+    <div class="stat-val">{{ employees|selectattr('total_allocation','lt',20)|list|length }}</div>
+    <div class="stat-lbl">Underutilized (&lt;20%)</div>
+  </div>
+</div>
+
+<div class="two-col">
+  <div class="tcard">
+    <div class="tcard-hdr">
+      <span class="tcard-ttl">🗺️ Team Utilization Heatmap</span>
+      <div style="display:flex;gap:10px;font-size:.72rem;align-items:center">
+        <span style="color:var(--success)">● &lt;60% OK</span>
+        <span style="color:var(--warning)">● 60–80% Busy</span>
+        <span style="color:var(--danger)">● &gt;80% Overloaded</span>
+      </div>
+    </div>
+    <div style="padding:18px 22px">
+      <div class="heatmap-wrap" id="heatmap"></div>
+    </div>
+  </div>
+
+  <div class="tcard">
+    <div class="tcard-hdr">
+      <span class="tcard-ttl">📁 Projects</span>
+      <a href="/pm/projects" class="btn btn-outline btn-sm">Manage →</a>
+    </div>
+    <table>
+      <thead><tr><th>Project</th><th>Status</th><th>Action</th></tr></thead>
+      <tbody>
+      {% for p in projects %}
+      <tr>
+        <td>
+          <div style="font-weight:600">{{ p.project_name }}</div>
+          <div style="font-size:.75rem;color:var(--muted)">{{ p.start_date }} → {{ p.end_date or 'Ongoing' }}</div>
+        </td>
+        <td><span class="badge badge-{{ p.status }}">{{ p.status }}</span></td>
+        <td><a href="/pm/project/{{ p.project_id }}" class="btn btn-outline btn-sm">Open</a></td>
+      </tr>
+      {% else %}
+      <tr><td colspan="3" style="color:var(--muted);text-align:center;padding:20px">No projects yet.</td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const heatData = {{ heatmap|safe }};
+const container = document.getElementById('heatmap');
+heatData.forEach(emp => {
+  const pct   = Math.min(emp.alloc, 100);
+  const cls   = pct > 80 ? 'r' : pct > 60 ? 'y' : 'g';
+  const label = pct > 80 ? 'Overloaded' : pct > 60 ? 'Busy' : 'Available';
+  container.innerHTML += `
+    <div class="hm-row">
+      <div class="hm-name" title="${emp.name}">${emp.name}</div>
+      <div class="hm-bar-bg">
+        <div class="hm-bar ${cls}" style="width:${Math.max(pct,5)}%">${label}</div>
+      </div>
+      <div class="hm-pct">${emp.alloc}%</div>
+    </div>`;
+});
+if (!heatData.length) container.innerHTML = '<p style="color:var(--muted);font-size:.85rem">No employee data.</p>';
+</script>
+{% endblock %}
